@@ -1,37 +1,34 @@
 default_ttl: 300
 
 records:
-  # IPv4
-  - name: your-domain.tld.
+  - name: example.com.
     type: A
     value: 203.0.113.10
 
-  # IPv6
-  - name: your-domain.tld.
+  - name: example.com.
     type: AAAA
     value: 2001:db8::10
 
-  # CNAME
-  - name: www.your-domain.tld.
+  - name: www.example.com.
     type: CNAME
-    value: your-domain.tld.
+    value: example.com.
 
-  # MX (priority host)
-  - name: your-domain.tld.
-    type: MX
-    value: 10 mail.your-domain.tld.
-
-  # NS
-  - name: your-domain.tld.
+  - name: example.com.
     type: NS
-    value: ns1.your-domain.tld.
+    value: ns1.example.com.
 
-  # TXT
-  - name: your-domain.tld.
+  - name: example.com.
     type: TXT
     value: "v=spf1 -all"
 
-  # PTR (reverse for 203.0.113.10 → your-domain.tld.)
   - name: 10.113.0.203.in-addr.arpa.
     type: PTR
-    value: your-domain.tld.
+    value: example.com.
+
+  - name: mail.example.com.
+    type: A
+    value: 203.0.113.20
+
+  - name: ns1.example.com.
+    type: A
+    value: 203.0.113.30
