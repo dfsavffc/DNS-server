@@ -18,7 +18,7 @@
 
 ```bash
 git clone https://github.com/dfsavffc/DNS-server
-cd src/dns_server
+cd DNS-server
 
 python3 -m venv .venv
 # Windows: ..venvScriptsactivate
