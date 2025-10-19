@@ -9,6 +9,8 @@
 ## Требования
 
 - **Python 3.12+**
+- dnslib
+- PyYAML
 
 ---
 
@@ -76,6 +78,14 @@ records:
 
 ```bash
 dns-server --config config.yaml --host 127.0.0.1 --port 5300 --log-level DEBUG
+```
+
+### Порт 53
+
+Потребуются права администратора/root и свободный порт:
+
+```bash
+dns-server --config config.yaml --host 0.0.0.0 --port 53
 ```
 
 ---
