@@ -1,7 +1,7 @@
 # DNS Server (Python)
 
 Авторитативный DNS-сервер на Python 3.12+.
-Поддерживает запросы типов **A, AAAA, CNAME, TXT, MX, NS, PTR** и **ANY**.
+Поддерживает запросы типов **A, AAAA, CNAME, TXT, NS, PTR** и **ANY**.
 Источником записей служит YAML-файл `config.yaml`. Сервер отвечает только за то, что описано в конфигурации (AA=1, RA=0).
 
 ---
@@ -18,9 +18,9 @@
 
 ```bash
 git clone https://github.com/dfsavffc/DNS-server
-cd dns-server
+cd src/dns_server
 
-python -m venv .venv
+python3 -m venv .venv
 # Windows: ..venvScriptsactivate
 # Linux/macOS:
 source .venv/bin/activate
@@ -48,10 +48,6 @@ records:
     value: example.com.
 
   - name: example.com.
-    type: MX
-    value: 10 mail.example.com.
-
-  - name: example.com.
     type: NS
     value: ns1.example.com.
 
@@ -68,7 +64,6 @@ records:
 
 - Все имена — **FQDN** с **точкой в конце** (например, `example.com.`).
 - Для `CNAME` / `NS` / `PTR` значение — тоже FQDN с точкой.
-- Для `MX` первое — приоритет (число), затем FQDN хоста.
 
 ---
 
@@ -98,15 +93,14 @@ dns-server --config config.yaml --host 0.0.0.0 --port 53
 nslookup -type=A -port=5300 example.com. 127.0.0.1
 nslookup -type=AAAA -port=5300 example.com. 127.0.0.1
 nslookup -type=CNAME -port=5300 www.example.com. 127.0.0.1
-nslookup -type=MX -port=5300 example.com. 127.0.0.1
 nslookup -type=TXT -port=5300 example.com. 127.0.0.1
 ```
 
 ### `dig`
 
 ```bash
-dig @127.0.0.1 -p 5300 example.com. A +noedns +nocookie
-dig @127.0.0.1 -p 5300 example.com. ANY +noedns +nocookie
+dig @127.0.0.1 -p 5300 example.com. A
+dig @127.0.0.1 -p 5300 example.com. ANY
 ```
 
 Ожидаемое:
