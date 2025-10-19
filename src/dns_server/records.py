@@ -9,8 +9,8 @@ class Record:
 
     Attributes:
         name: Fully-qualified domain name (must end with a dot).
-        rtype: DNS record type (A, AAAA, CNAME, TXT, MX, NS, PTR).
-        value: Record value; for MX, formatted as "<priority> <host>".
+        rtype: DNS record type (A, AAAA, CNAME, TXT, NS, PTR).
+        value: Record value.
         ttl: Time to live (in seconds).
     """
 
