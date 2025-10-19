@@ -28,7 +28,7 @@ class Config:
     """Manages configuration state and indexed DNS records."""
 
     def __init__(self, path: str) -> None:
-        """Initialize configuration and load records from a file."""
+        """Initialize configuration and load records from file."""
         self.path = path
         self._mtime = 0.0
         self.default_ttl = 300
@@ -52,8 +52,11 @@ class Config:
         if not force and st.st_mtime <= self._mtime:
             return
 
-        with open(self.path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+        try:
+            with open(self.path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+        except yaml.YAMLError as exc:
+            raise ValueError(f"YAML parsing error: {exc}") from exc
 
         self.default_ttl = int(data.get("default_ttl", 300))
         raw_records = data.get("records", [])
@@ -67,13 +70,15 @@ class Config:
                 rtype = str(item["type"]).upper().strip()
                 value = str(item["value"]).strip()
                 ttl = int(item.get("ttl", self.default_ttl))
-                if not name.endswith("."):
-                    raise ValueError("record name must be a fully-qualified domain ending with '.'")
-                if rtype not in SUPPORTED_QTYPES:
-                    raise ValueError(f"unsupported type '{rtype}'")
-                recs.append(Record(name=name, rtype=rtype, value=value, ttl=ttl))
-            except Exception as exc:
-                raise ValueError(f"Error in record #{i}: {exc}") from exc
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError(f"Malformed record #{i}: {exc}") from exc
+
+            if not name.endswith("."):
+                raise ValueError(f"record #{i}: name must end with '.' (got {name!r})")
+            if rtype not in SUPPORTED_QTYPES:
+                raise ValueError(f"record #{i}: unsupported type '{rtype}'")
+
+            recs.append(Record(name=name, rtype=rtype, value=value, ttl=ttl))
 
         index: Dict[Tuple[str, str], List[Record]] = {}
         for rec in recs:
@@ -88,7 +93,7 @@ class Config:
         """Reload the configuration file if it has been modified."""
         try:
             self.load(force=False)
-        except Exception as exc:
+        except (ValueError, yaml.YAMLError, OSError) as exc:
             logger.error("failed to reload configuration: %s", exc)
 
     def _to_rrs(self, name_lc: str, rtype: str) -> List[RR]:
@@ -109,27 +114,20 @@ class Config:
                     out.append(RR(label, QTYPE.TXT, rdata=TXT(rec.value), ttl=rec.ttl))
                 elif rtype == "MX":
                     prio_str, host = rec.value.split(maxsplit=1)
-                    out.append(
-                        RR(label, QTYPE.MX, rdata=MX(int(prio_str), DNSLabel(host)), ttl=rec.ttl)
-                    )
+                    prio = int(prio_str)
+                    out.append(RR(label, QTYPE.MX, rdata=MX(prio, DNSLabel(host)), ttl=rec.ttl))
                 elif rtype == "NS":
                     out.append(RR(label, QTYPE.NS, rdata=NS(DNSLabel(rec.value)), ttl=rec.ttl))
                 elif rtype == "PTR":
                     out.append(RR(label, QTYPE.PTR, rdata=PTR(DNSLabel(rec.value)), ttl=rec.ttl))
-            except Exception:
-                logger.warning("invalid record skipped: %s %s", rtype, rec.value)
+            except ipaddress.AddressValueError:
+                logger.warning("invalid IP address skipped: %s %s", rtype, rec.value)
+            except (ValueError, IndexError):
+                logger.warning("invalid record format skipped: %s %s", rtype, rec.value)
         return out
 
     def lookup(self, qname: DNSLabel, qtype: int) -> tuple[List[RR], List[RR]]:
-        """Resolve a query against the record index.
-
-        Args:
-            qname: Queried domain name.
-            qtype: Numeric DNS query type (see `dnslib.QTYPE`).
-
-        Returns:
-            A tuple of `(answers, additionals)` lists of RR objects.
-        """
+        """Resolve a query against the record index."""
         name = str(qname).lower()
         answers: List[RR] = []
         additionals: List[RR] = []
@@ -143,7 +141,7 @@ class Config:
         if qtype_name in SUPPORTED_QTYPES:
             answers.extend(self._to_rrs(name, qtype_name))
 
-        if not answers:  # Handle CNAME fallback
+        if not answers:
             cname_rrs = self._to_rrs(name, "CNAME")
             if cname_rrs:
                 answers.extend(cname_rrs)

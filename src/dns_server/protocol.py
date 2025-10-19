@@ -1,8 +1,12 @@
 """Asyncio-based UDP protocol handler for DNS."""
 from __future__ import annotations
+
 import asyncio
 import logging
+
 from dnslib import DNSHeader, DNSRecord, QTYPE, RCODE
+from dnslib.dns import DNSError
+
 from .config import Config
 
 logger = logging.getLogger(__name__)
@@ -12,7 +16,7 @@ class DNSUDPProtocol(asyncio.DatagramProtocol):
     """Implements the minimal authoritative DNS UDP protocol."""
 
     def __init__(self, config: Config) -> None:
-        """Store reference to a configuration object."""
+        """Store reference to configuration object."""
         self.transport: asyncio.DatagramTransport | None = None
         self.config = config
 
@@ -29,7 +33,7 @@ class DNSUDPProtocol(asyncio.DatagramProtocol):
 
         try:
             request = DNSRecord.parse(data)
-        except Exception:
+        except DNSError:
             logger.debug("failed to parse request from %s", addr)
             return
 
@@ -48,4 +52,7 @@ class DNSUDPProtocol(asyncio.DatagramProtocol):
             reply.header.rcode = RCODE.NXDOMAIN
 
         if self.transport:
-            self.transport.sendto(reply.pack(), addr)
+            try:
+                self.transport.sendto(reply.pack(), addr)
+            except (OSError, RuntimeError) as exc:
+                logger.warning("failed to send response to %s: %s", addr, exc)

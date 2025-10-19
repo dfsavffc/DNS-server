@@ -28,4 +28,7 @@ def main() -> None:
     if sys.platform.startswith("win"):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    asyncio.run(serve(args.config, args.host, args.port, args.log_level))
+    try:
+        asyncio.run(serve(args.config, args.host, args.port, args.log_level))
+    except KeyboardInterrupt:
+        pass
