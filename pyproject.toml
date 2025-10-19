@@ -1,0 +1,22 @@
+[project]
+name = "dns-server"
+version = "0.1.0"
+description = "Minimal authoritative DNS server (A/AAAA/CNAME/TXT/MX/NS/PTR) with YAML config"
+readme = "README.md"
+authors = [{ name = "Your Name" }]
+requires-python = ">=3.12"
+dependencies = [
+  "dnslib>=0.9.25",
+  "PyYAML>=6.0.2",
+]
+
+[project.scripts]
+dns-server = "dns_server.cli:main"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
