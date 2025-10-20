@@ -1,8 +1,9 @@
-"""Asyncio-based UDP protocol handler for DNS."""
+"""Asyncio UDP protocol for the authoritative DNS server."""
 from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 from dnslib import DNSHeader, DNSRecord, QTYPE, RCODE
 from dnslib.dns import DNSError
@@ -13,21 +14,42 @@ logger = logging.getLogger(__name__)
 
 
 class DNSUDPProtocol(asyncio.DatagramProtocol):
-    """Implements the minimal authoritative DNS UDP protocol."""
+    """Authoritative DNS handler over UDP.
+
+    Attributes:
+        transport: Active UDP transport or None until connected.
+        config: Shared configuration and record index.
+    """
 
     def __init__(self, config: Config) -> None:
-        """Store reference to configuration object."""
+        """Initialize the protocol.
+
+        Args:
+            config: Loaded configuration backing responses.
+        """
         self.transport: asyncio.DatagramTransport | None = None
         self.config = config
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
-        """Called when the UDP socket is ready."""
+        """Called by asyncio when the UDP socket is ready.
+
+        Args:
+            transport: Created datagram transport.
+        """
         self.transport = transport  # type: ignore[assignment]
         sock = self.transport.get_extra_info("socket")
         logger.info("UDP listening on %s", sock.getsockname() if sock else "?")
 
-    def datagram_received(self, data: bytes, addr) -> None:
-        """Handle an incoming UDP datagram."""
+    def datagram_received(self, data: bytes, addr: Any) -> None:
+        """Process a single DNS datagram.
+
+        Args:
+            data: Raw DNS message bytes.
+            addr: Client address tuple as provided by asyncio.
+
+        Returns:
+            None
+        """
         logger.debug("received %d bytes from %s", len(data), addr)
         self.config.maybe_reload()
 

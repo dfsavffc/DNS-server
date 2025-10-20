@@ -9,8 +9,8 @@
 ## Требования
 
 - **Python 3.12+**
-- dnslib
-- PyYAML
+- **dnslib**
+- **PyYAML**
 
 ---
 
@@ -21,7 +21,8 @@ git clone https://github.com/dfsavffc/DNS-server
 cd DNS-server
 
 python3 -m venv .venv
-# Windows: ..venvScriptsactivate
+# Windows: 
+..venvScriptsactivate
 # Linux/macOS:
 source .venv/bin/activate
 

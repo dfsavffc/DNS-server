@@ -1,17 +1,18 @@
 """Data structures representing DNS records."""
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 
 @dataclass(slots=True)
 class Record:
-    """Represents a single DNS record loaded from YAML.
+    """Single DNS record entry.
 
     Attributes:
-        name: Fully-qualified domain name (must end with a dot).
-        rtype: DNS record type (A, AAAA, CNAME, TXT, NS, PTR).
-        value: Record value.
-        ttl: Time to live (in seconds).
+        name (str): Fully qualified domain name (must end with a dot).
+        rtype (str): DNS record type (A, AAAA, CNAME, TXT, NS, PTR).
+        value (str): Record value.
+        ttl (int): Time to live, in seconds.
     """
 
     name: str
